@@ -443,6 +443,11 @@ function App() {
         </div>
       </section>
 
+      <section className="seo-block" aria-label="about">
+        <h2 className="seo-title">{t.sectionHeadline}</h2>
+        <p className="seo-description">{t.sectionDescription}</p>
+      </section>
+
       {isModalOpen && resultMovie && (
         <div
           className="modal-backdrop"

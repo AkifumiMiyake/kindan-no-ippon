@@ -50,6 +50,7 @@
   text-transform: uppercase;
   font-size: 0.75rem;
   color: var(--text-muted);
+  margin-bottom: 0;
 }
 
 .title {
@@ -68,6 +69,10 @@
   color: var(--text-muted);
   text-align: center;
   margin-inline: auto;
+  background: #cccccc;
+  color: #333333;
+  padding: 0em 1em;
+  font-weight: bold;
 }
 
 .notice {
@@ -319,6 +324,29 @@
   color: var(--text-muted);
 }
 
+.seo-block {
+  margin-top: 12px;
+  padding: 20px 24px;
+  border: 1px solid var(--panel-border);
+  border-radius: 22px;
+  background: rgba(20, 12, 14, 0.65);
+}
+
+.seo-title {
+  margin: 0 0 8px;
+  font-size: 1.2rem;
+  letter-spacing: 0.08em;
+  text-align: center;
+}
+
+.seo-description {
+  margin: 0;
+  text-align: center;
+  color: var(--text-muted);
+  line-height: 1.7;
+  white-space: pre-line;
+}
+
 .modal-backdrop {
   position: fixed;
   inset: 0;
@@ -436,6 +464,14 @@
 
   .result-body {
     gap: 10px;
+  }
+
+  .seo-block {
+    padding: 16px 18px;
+  }
+
+  .seo-title {
+    font-size: 1.05rem;
   }
 
   .locale-selector {

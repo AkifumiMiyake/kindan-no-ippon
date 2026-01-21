@@ -48,6 +48,8 @@ export type Dictionary = {
   decisionLine2: string
   footerCredit: string
   loadingDetails: string
+  sectionHeadline: string
+  sectionDescription: string
   releaseYear: (year: string) => string
   runtimeMinutes: (minutes: number) => string
 }
@@ -102,6 +104,9 @@ export const I18N: Record<Locale, Dictionary> = {
     footerCredit:
       'This product uses the TMDB API but is not endorsed or certified by TMDB.',
     loadingDetails: '詳細を読み込み中…',
+    sectionHeadline: '迷う夜に、禁断の選択を',
+    sectionDescription:
+      '「何を観るか決められない」そんな夜のために作ったのが、禁断の一本です。\nホラー映画限定で、条件を選ぶだけ。あとはルーレットが今夜観る一本を即決します。\n検索も比較も必要ありません。迷う時間を、恐怖の時間に変えてみてください。',
     releaseYear: (year) => `公開：${year}`,
     runtimeMinutes: (minutes) => `上映時間：${minutes}分`,
   },
@@ -154,6 +159,9 @@ export const I18N: Record<Locale, Dictionary> = {
     footerCredit:
       'This product uses the TMDB API but is not endorsed or certified by TMDB.',
     loadingDetails: 'Loading details…',
+    sectionHeadline: 'When You Can’t Decide What to Watch',
+    sectionDescription:
+      'Kindan no Ippon was created for nights when you just can’t decide what to watch.\nChoose a few conditions, and our horror-only roulette instantly picks tonight’s movie.\nNo searching. No comparing. Turn indecision into a night of fear.',
     releaseYear: (year) => `Release: ${year}`,
     runtimeMinutes: (minutes) => `Runtime: ${minutes} min`,
   },
@@ -206,6 +214,9 @@ export const I18N: Record<Locale, Dictionary> = {
     footerCredit:
       'This product uses the TMDB API but is not endorsed or certified by TMDB.',
     loadingDetails: '상세 정보 불러오는 중…',
+    sectionHeadline: '결정하지 못하는 밤에, 금단의 선택을',
+    sectionDescription:
+      "무엇을 볼지 결정하지 못하는 밤을 위해 만들어진 것이 ‘금단의 한 편’입니다.\n호러 영화만을 대상으로, 조건을 고르면 룰렛이 오늘 밤의 영화를 즉시 결정합니다.\n검색도 비교도 필요 없습니다. 망설임의 시간을 공포의 시간으로 바꿔보세요.",
     releaseYear: (year) => `개봉: ${year}`,
     runtimeMinutes: (minutes) => `상영시간: ${minutes}분`,
   },
