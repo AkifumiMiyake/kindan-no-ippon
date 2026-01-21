@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import './App.css'
+import { I18N, type Locale } from './i18n'
 
 type ScareLevel = 'light' | 'normal' | 'strong' | 'surprise'
 type RuntimeRange = 'short' | 'medium' | 'long'
@@ -19,6 +20,9 @@ type Filters = {
   era: Era
 }
 
+type StatusKey = 'fetching' | 'spinning' | ''
+type ErrorKey = 'fetch' | 'api' | 'noResults' | 'network' | ''
+
 const DEFAULT_FILTERS: Filters = {
   scare: 'normal',
   runtime: 'medium',
@@ -26,35 +30,27 @@ const DEFAULT_FILTERS: Filters = {
 }
 
 const FILTER_STORAGE_KEY = 'knippon:filters'
+const LOCALE_STORAGE_KEY = 'kni_locale'
 
-const scareOptions: Array<{ value: ScareLevel; label: string; sub: string }> = [
-  { value: 'light', label: '軽め', sub: '心理・雰囲気' },
-  { value: 'normal', label: '普通', sub: '王道ホラー' },
-  { value: 'strong', label: '強め', sub: '過激OK' },
-  { value: 'surprise', label: 'おまかせ', sub: '全開放' },
-]
-
-const runtimeOptions: Array<{ value: RuntimeRange; label: string }> = [
-  { value: 'short', label: '〜90分' },
-  { value: 'medium', label: '90〜120分' },
-  { value: 'long', label: '120分〜' },
-]
-
-const eraOptions: Array<{ value: Era; label: string }> = [
-  { value: 'new', label: '新しめ' },
-  { value: 'classic', label: '名作' },
-  { value: 'any', label: 'こだわらない' },
-]
+const posterUrl = (path: string | null) =>
+  path ? `https://image.tmdb.org/t/p/w500${path}` : null
 
 const truncate = (text: string, length = 90) => {
   if (text.length <= length) return text
   return `${text.slice(0, length)}…`
 }
 
-const posterUrl = (path: string | null) =>
-  path ? `https://image.tmdb.org/t/p/w500${path}` : null
+const normalizeLocale = (value: string | null): Locale => {
+  if (value === 'en' || value === 'ko' || value === 'ja') return value
+  return 'ja'
+}
 
 function App() {
+  const [locale, setLocale] = useState<Locale>(() =>
+    normalizeLocale(localStorage.getItem(LOCALE_STORAGE_KEY))
+  )
+  const t = useMemo(() => I18N[locale], [locale])
+
   const [filters, setFilters] = useState<Filters>(() => {
     const saved = localStorage.getItem(FILTER_STORAGE_KEY)
     if (!saved) return DEFAULT_FILTERS
@@ -65,13 +61,17 @@ function App() {
       return DEFAULT_FILTERS
     }
   })
+
   const [isSpinning, setIsSpinning] = useState(false)
-  const [currentMovie, setCurrentMovie] = useState<Movie | null>(null)
-  const [result, setResult] = useState<Movie | null>(null)
+  const [candidates, setCandidates] = useState<Movie[]>([])
+  const [displayIndex, setDisplayIndex] = useState(0)
+  const [resultMovie, setResultMovie] = useState<Movie | null>(null)
+  const [resultLocale, setResultLocale] = useState<Locale | null>(null)
   const [runtimeMinutes, setRuntimeMinutes] = useState<number | null>(null)
+  const [detailTitle, setDetailTitle] = useState<string | null>(null)
   const [detailOverview, setDetailOverview] = useState<string | null>(null)
-  const [status, setStatus] = useState('')
-  const [error, setError] = useState('')
+  const [statusKey, setStatusKey] = useState<StatusKey>('')
+  const [errorKey, setErrorKey] = useState<ErrorKey>('')
   const [decided, setDecided] = useState(false)
   const [isModalOpen, setIsModalOpen] = useState(false)
   const timeoutsRef = useRef<number[]>([])
@@ -79,6 +79,10 @@ function App() {
   useEffect(() => {
     localStorage.setItem(FILTER_STORAGE_KEY, JSON.stringify(filters))
   }, [filters])
+
+  useEffect(() => {
+    localStorage.setItem(LOCALE_STORAGE_KEY, locale)
+  }, [locale])
 
   useEffect(() => {
     return () => {
@@ -95,62 +99,144 @@ function App() {
   }, [isModalOpen])
 
   useEffect(() => {
-    if (!result) {
+    if (!resultMovie) {
       setRuntimeMinutes(null)
+      setDetailTitle(null)
       setDetailOverview(null)
       return
     }
+
     let isMounted = true
-    const loadRuntime = async () => {
+    const loadDetails = async () => {
       try {
-        const response = await fetch(`/api/movie?id=${result.id}`)
+        setRuntimeMinutes(null)
+        setDetailTitle(null)
+        setDetailOverview(null)
+        const response = await fetch(
+          `/api/movie?id=${resultMovie.id}&locale=${locale}`
+        )
         if (!response.ok) return
         const data = (await response.json()) as {
           runtime: number | null
           overview: string | null
+          title: string | null
         }
-        if (isMounted) {
-          setRuntimeMinutes(data.runtime ?? null)
-          setDetailOverview(data.overview ?? null)
-        }
+        if (!isMounted) return
+        setRuntimeMinutes(data.runtime ?? null)
+        setDetailTitle(data.title ?? null)
+        setDetailOverview(data.overview ?? null)
       } catch {
-        if (isMounted) {
-          setRuntimeMinutes(null)
-          setDetailOverview(null)
-        }
+        if (!isMounted) return
+        setRuntimeMinutes(null)
+        setDetailTitle(null)
+        setDetailOverview(null)
       }
     }
-    loadRuntime()
+
+    loadDetails()
     return () => {
       isMounted = false
     }
-  }, [result])
+  }, [resultMovie, locale])
 
   const year = useMemo(() => {
-    if (!result?.release_date) return ''
-    return result.release_date.slice(0, 4)
-  }, [result])
+    if (!resultMovie?.release_date) return ''
+    return resultMovie.release_date.slice(0, 4)
+  }, [resultMovie])
+
+  const statusText = useMemo(() => {
+    switch (statusKey) {
+      case 'fetching':
+        return t.statusFetching
+      case 'spinning':
+        return t.statusSpinning
+      default:
+        return ''
+    }
+  }, [statusKey, t])
+
+  const errorText = useMemo(() => {
+    switch (errorKey) {
+      case 'fetch':
+        return t.errorFetch
+      case 'api':
+        return t.errorApiUnavailable
+      case 'noResults':
+        return t.errorNoResults
+      case 'network':
+        return t.errorNetwork
+      default:
+        return ''
+    }
+  }, [errorKey, t])
+
+  const scareOptions = useMemo(
+    () => [
+      { value: 'light' as const, label: t.scareLight, sub: t.scareLightSub },
+      { value: 'normal' as const, label: t.scareNormal, sub: t.scareNormalSub },
+      { value: 'strong' as const, label: t.scareStrong, sub: t.scareStrongSub },
+      {
+        value: 'surprise' as const,
+        label: t.scareSurprise,
+        sub: t.scareSurpriseSub,
+      },
+    ],
+    [t]
+  )
+
+  const runtimeOptions = useMemo(
+    () => [
+      { value: 'short' as const, label: t.runtimeShort },
+      { value: 'medium' as const, label: t.runtimeMedium },
+      { value: 'long' as const, label: t.runtimeLong },
+    ],
+    [t]
+  )
+
+  const eraOptions = useMemo(
+    () => [
+      { value: 'new' as const, label: t.eraNew },
+      { value: 'classic' as const, label: t.eraClassic },
+      { value: 'any' as const, label: t.eraAny },
+    ],
+    [t]
+  )
+
+  const clearTimers = () => {
+    timeoutsRef.current.forEach((timeoutId) => window.clearTimeout(timeoutId))
+    timeoutsRef.current = []
+  }
 
   const handleSpin = async () => {
     if (isSpinning || decided) return
     setDecided(false)
-    setError('')
-    setStatus('候補を集めています…')
+    setErrorKey('')
+    setStatusKey('fetching')
     setIsSpinning(true)
-    setResult(null)
+    setResultMovie(null)
+    setResultLocale(null)
     setRuntimeMinutes(null)
+    setDetailTitle(null)
     setDetailOverview(null)
     setIsModalOpen(false)
+
+    let handledError: ErrorKey = ''
+    const setHandledError = (key: ErrorKey) => {
+      handledError = key
+      setErrorKey(key)
+    }
 
     try {
       const params = new URLSearchParams({
         scare: filters.scare,
         runtime: filters.runtime,
         era: filters.era,
+        locale,
       })
       const response = await fetch(`/api/discover?${params.toString()}`)
       if (!response.ok) {
-        throw new Error('TMDBから候補を取得できませんでした。')
+        setHandledError('fetch')
+        throw new Error('fetch failed')
       }
       let data: { results: Movie[]; picked?: Movie | null }
       try {
@@ -159,57 +245,55 @@ function App() {
           picked?: Movie | null
         }
       } catch {
-        throw new Error(
-          'APIが応答していません。`vercel dev` で起動してください。'
-        )
+        setHandledError('api')
+        throw new Error('api invalid')
       }
       if (!data.results.length) {
-        throw new Error('条件に合う作品が見つかりませんでした。')
+        setHandledError('noResults')
+        throw new Error('no results')
       }
+      setCandidates(data.results)
       runSpin(data.results, data.picked ?? undefined)
     } catch (caught) {
-      const message =
-        caught instanceof Error ? caught.message : '通信に失敗しました。'
-      setError(message)
+      if (!handledError) {
+        setHandledError('network')
+      }
       setIsSpinning(false)
-      setStatus('')
+      setStatusKey('')
     }
   }
 
   const runSpin = (movies: Movie[], pickedMovie?: Movie) => {
-    timeoutsRef.current.forEach((timeoutId) => window.clearTimeout(timeoutId))
-    timeoutsRef.current = []
+    clearTimers()
 
-    const steps = 26
+    const steps = 20
     let elapsed = 0
-    let latest = movies[Math.floor(Math.random() * movies.length)]
-    setCurrentMovie(latest)
-    setStatus('ルーレットが回っています…')
+    setStatusKey('spinning')
+    setDisplayIndex(Math.floor(Math.random() * movies.length))
 
     for (let i = 0; i < steps; i += 1) {
       const progress = i / steps
-      const delay = Math.round(45 + progress * progress * 220)
+      const delay = Math.round(50 + progress * progress * 240)
       elapsed += delay
       const timeoutId = window.setTimeout(() => {
-        latest = movies[Math.floor(Math.random() * movies.length)]
-        setCurrentMovie(latest)
+        setDisplayIndex(Math.floor(Math.random() * movies.length))
       }, elapsed)
       timeoutsRef.current.push(timeoutId)
     }
 
     const finalizeId = window.setTimeout(() => {
-      const finalMovie = pickedMovie ?? latest
-      setResult(finalMovie)
-      setCurrentMovie(finalMovie)
+      const finalMovie = pickedMovie ?? movies[Math.floor(Math.random() * movies.length)]
+      setResultMovie(finalMovie)
+      setResultLocale(locale)
       setIsSpinning(false)
-      setStatus('')
+      setStatusKey('')
       setIsModalOpen(true)
-    }, elapsed + 120)
+    }, elapsed + 140)
     timeoutsRef.current.push(finalizeId)
   }
 
   const handleDecide = () => {
-    if (!result) return
+    if (!resultMovie) return
     setDecided(true)
   }
 
@@ -224,27 +308,63 @@ function App() {
     }
   }
 
-  const displayMovie = currentMovie ?? result
-  const displayPoster = posterUrl(displayMovie?.poster_path ?? null)
-  const overviewText = detailOverview ?? result?.overview ?? ''
+  const displayMovie = useMemo(() => {
+    if (isSpinning && candidates.length) {
+      return candidates[displayIndex % candidates.length]
+    }
+    return resultMovie
+  }, [isSpinning, candidates, displayIndex, resultMovie])
+
+  const displayPoster = useMemo(
+    () => posterUrl(displayMovie?.poster_path ?? null),
+    [displayMovie]
+  )
+
+  const titleText =
+    detailTitle ?? (resultLocale === locale ? resultMovie?.title ?? '' : '')
+  const overviewText =
+    detailOverview ??
+    (resultLocale === locale ? resultMovie?.overview ?? '' : '')
+  const overviewDisplay =
+    overviewText && overviewText.trim().length > 0
+      ? truncate(overviewText, 120)
+      : resultMovie && resultLocale !== locale
+        ? t.loadingDetails
+        : t.overviewFallback
 
   return (
     <div className="page">
+      <div className="locale-selector">
+        <label className="locale-label" htmlFor="locale-select">
+          {t.languageLabel}
+        </label>
+        <select
+          id="locale-select"
+          className="locale-select"
+          value={locale}
+          onChange={(event) => setLocale(event.target.value as Locale)}
+        >
+          <option value="ja">日本語</option>
+          <option value="en">English</option>
+          <option value="ko">한국어</option>
+        </select>
+      </div>
+
       <header className="hero">
-        <p className="kicker">回したら、戻れない。</p>
-        <h1 className="title">禁断の一本</h1>
-        <p className="subtitle">ルーレットが決める、今夜の一本。</p>
+        <p className="kicker">{t.kicker}</p>
+        <h1 className="title">{t.appTitle}</h1>
+        <p className="subtitle">{t.subtitle}</p>
         <p className="notice">
-          ホラー映画の中から、今夜観る一本を
+          {t.noticeLine1}
           <br />
-          ルーレットで決めるアプリです。
+          {t.noticeLine2}
         </p>
       </header>
 
       <section className="panel">
         <div className="controls">
           <fieldset className="control-group" disabled={isSpinning}>
-            <legend className="control-legend">怖さレベル</legend>
+            <legend className="control-legend">{t.scareLegend}</legend>
             <div className="segmented">
               {scareOptions.map((option) => (
                 <button
@@ -263,7 +383,7 @@ function App() {
           </fieldset>
 
           <fieldset className="control-group" disabled={isSpinning}>
-            <legend className="control-legend">尺</legend>
+            <legend className="control-legend">{t.runtimeLegend}</legend>
             <div className="segmented">
               {runtimeOptions.map((option) => (
                 <button
@@ -281,7 +401,7 @@ function App() {
           </fieldset>
 
           <fieldset className="control-group" disabled={isSpinning}>
-            <legend className="control-legend">新しさ</legend>
+            <legend className="control-legend">{t.eraLegend}</legend>
             <div className="segmented">
               {eraOptions.map((option) => (
                 <button
@@ -306,26 +426,24 @@ function App() {
             onClick={handleSpin}
             disabled={isSpinning || decided}
           >
-            {isSpinning ? '運命が回転中…' : '恐怖を回す'}
+            {isSpinning ? t.spinningButton : t.spinButton}
           </button>
-          {isSpinning && (
-            <p className="hint">停止まで操作できません。深呼吸して待って。</p>
-          )}
-          {result && !isSpinning && (
+          {isSpinning && <p className="hint">{t.spinningHint}</p>}
+          {resultMovie && !isSpinning && (
             <button
               type="button"
               className="ghost-button"
               onClick={() => setIsModalOpen(true)}
             >
-              結果をもう一度見る
+              {t.resultAgain}
             </button>
           )}
-          {status && <p className="status">{status}</p>}
-          {error && <p className="error">{error}</p>}
+          {statusText && <p className="status">{statusText}</p>}
+          {errorText && <p className="error">{errorText}</p>}
         </div>
       </section>
 
-      {isModalOpen && result && (
+      {isModalOpen && resultMovie && (
         <div
           className="modal-backdrop"
           role="dialog"
@@ -341,30 +459,30 @@ function App() {
               type="button"
               className="modal-close"
               onClick={handleCloseModal}
-              aria-label="閉じる"
+              aria-label={t.closeLabel}
             >
               ×
             </button>
             <div className="result-media">
               {displayPoster ? (
-                <img src={displayPoster} alt={displayMovie?.title ?? ''} />
+                <img src={displayPoster} alt={titleText} />
               ) : (
-                <div className="poster-fallback">No Poster</div>
+                <div className="poster-fallback">{t.noPoster}</div>
               )}
             </div>
             <div className="result-body">
-              <p className="result-label">TONIGHT</p>
+              <p className="result-label">{t.resultLabel}</p>
               <h2 className="result-title" id="result-title">
-                {result.title}
+                {titleText || t.loadingDetails}
               </h2>
               <p className="result-meta">
-                {year ? `公開：${year}` : '公開年不明'}
+                {year ? t.releaseYear(year) : t.releaseUnknown}
               </p>
               <p className="result-meta">
-                {runtimeMinutes ? `上映時間：${runtimeMinutes}分` : '上映時間不明'}
+                {runtimeMinutes ? t.runtimeMinutes(runtimeMinutes) : t.runtimeUnknown}
               </p>
               <p className="result-overview">
-                {overviewText ? truncate(overviewText, 120) : '今夜の一本、決定。'}
+                {overviewDisplay}
               </p>
 
               <div className="result-actions">
@@ -374,7 +492,7 @@ function App() {
                   onClick={handleDecide}
                   disabled={decided}
                 >
-                  {decided ? '決まりました' : '今夜はこれにする'}
+                  {decided ? t.decidedButton : t.decideButton}
                 </button>
                 {!decided && (
                   <button
@@ -382,25 +500,25 @@ function App() {
                     className="ghost-button"
                     onClick={handleRespin}
                   >
-                    もう一回怖がる
+                    {t.respinButton}
                   </button>
                 )}
                 <a
                   className="ghost-button"
                   href={`https://www.youtube.com/results?search_query=${encodeURIComponent(
-                    `${result.title} trailer`
+                    `${titleText || resultMovie.title} trailer`
                   )}`}
                   target="_blank"
                   rel="noreferrer"
                 >
-                  予告編をYouTubeで検索
+                  {t.trailerButton}
                 </a>
               </div>
               {decided && (
                 <p className="decision-note">
-                  今夜は、これでいきましょう。
+                  {t.decisionLine1}
                   <br />
-                  いい時間になりますように。
+                  {t.decisionLine2}
                 </p>
               )}
             </div>
@@ -408,10 +526,7 @@ function App() {
         </div>
       )}
 
-      <footer className="footer">
-        This product uses the TMDB API but is not endorsed or certified by
-        TMDB.
-      </footer>
+      <footer className="footer">{t.footerCredit}</footer>
     </div>
   )
 }

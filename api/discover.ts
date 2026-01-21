@@ -34,6 +34,23 @@ const resolveScare = (scare: string) => {
   return candidates[Math.floor(Math.random() * candidates.length)]
 }
 
+const resolveLocale = (locale: string) => {
+  if (locale === 'en' || locale === 'ko' || locale === 'ja') return locale
+  return 'ja'
+}
+
+const localeToLanguage = (locale: string) => {
+  switch (locale) {
+    case 'en':
+      return 'en-US'
+    case 'ko':
+      return 'ko-KR'
+    case 'ja':
+    default:
+      return 'ja-JP'
+  }
+}
+
 const mapRuntimeToParams = (runtime: string) => {
   switch (runtime) {
     case 'short':
@@ -88,8 +105,9 @@ export default async function handler(req: any, res: any) {
   const scareInput = req.query?.scare ?? 'normal'
   const runtime = req.query?.runtime ?? 'medium'
   const era = req.query?.era ?? 'any'
+  const locale = resolveLocale(String(req.query?.locale ?? 'ja'))
   const scare = resolveScare(String(scareInput))
-  const cacheKey = `${scareInput}:${runtime}:${era}`
+  const cacheKey = `${scareInput}:${runtime}:${era}:${locale}`
 
   const cachedResults = getCached(cacheKey)
   if (cachedResults?.length) {
@@ -105,7 +123,7 @@ export default async function handler(req: any, res: any) {
   const baseParams = new URLSearchParams({
     with_genres: '27',
     include_adult: scare === 'strong' ? 'true' : 'false',
-    language: 'ja-JP',
+    language: localeToLanguage(locale),
   })
 
   const scareParams = mapScareToParams(String(scare))
