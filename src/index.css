@@ -1,0 +1,56 @@
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Shippori+Mincho+B1:wght@400;600&display=swap');
+
+:root {
+  --bg: #0f0a0b;
+  --bg-deep: #1b0e12;
+  --panel: rgba(20, 12, 14, 0.82);
+  --panel-border: rgba(255, 255, 255, 0.08);
+  --chip: rgba(255, 255, 255, 0.05);
+  --text: #f7f1f3;
+  --text-muted: rgba(247, 241, 243, 0.62);
+  --accent: #e84058;
+  --accent-soft: rgba(232, 64, 88, 0.75);
+  --error: #ff6a6a;
+  --font-display: 'Bebas Neue', 'Impact', sans-serif;
+  --font-body: 'Shippori Mincho B1', 'Times New Roman', serif;
+
+  font-family: var(--font-body);
+  line-height: 1.6;
+  font-weight: 400;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  background:
+    radial-gradient(circle at top, rgba(232, 64, 88, 0.15), transparent 45%),
+    radial-gradient(circle at 20% 20%, rgba(255, 255, 255, 0.06), transparent 40%),
+    linear-gradient(140deg, var(--bg) 20%, var(--bg-deep) 90%);
+  color: var(--text);
+  overflow-x: hidden;
+}
+
+a {
+  color: inherit;
+}
+
+button,
+input,
+select,
+textarea {
+  font-family: inherit;
+}
+
+#root {
+  min-height: 100vh;
+}
