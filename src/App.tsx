@@ -69,6 +69,7 @@ function App() {
   const [currentMovie, setCurrentMovie] = useState<Movie | null>(null)
   const [result, setResult] = useState<Movie | null>(null)
   const [runtimeMinutes, setRuntimeMinutes] = useState<number | null>(null)
+  const [detailOverview, setDetailOverview] = useState<string | null>(null)
   const [status, setStatus] = useState('')
   const [error, setError] = useState('')
   const [decided, setDecided] = useState(false)
@@ -96,6 +97,7 @@ function App() {
   useEffect(() => {
     if (!result) {
       setRuntimeMinutes(null)
+      setDetailOverview(null)
       return
     }
     let isMounted = true
@@ -103,10 +105,19 @@ function App() {
       try {
         const response = await fetch(`/api/movie?id=${result.id}`)
         if (!response.ok) return
-        const data = (await response.json()) as { runtime: number | null }
-        if (isMounted) setRuntimeMinutes(data.runtime ?? null)
+        const data = (await response.json()) as {
+          runtime: number | null
+          overview: string | null
+        }
+        if (isMounted) {
+          setRuntimeMinutes(data.runtime ?? null)
+          setDetailOverview(data.overview ?? null)
+        }
       } catch {
-        if (isMounted) setRuntimeMinutes(null)
+        if (isMounted) {
+          setRuntimeMinutes(null)
+          setDetailOverview(null)
+        }
       }
     }
     loadRuntime()
@@ -128,6 +139,7 @@ function App() {
     setIsSpinning(true)
     setResult(null)
     setRuntimeMinutes(null)
+    setDetailOverview(null)
     setIsModalOpen(false)
 
     try {
@@ -214,6 +226,7 @@ function App() {
 
   const displayMovie = currentMovie ?? result
   const displayPoster = posterUrl(displayMovie?.poster_path ?? null)
+  const overviewText = detailOverview ?? result?.overview ?? ''
 
   return (
     <div className="page">
@@ -351,9 +364,7 @@ function App() {
                 {runtimeMinutes ? `上映時間：${runtimeMinutes}分` : '上映時間不明'}
               </p>
               <p className="result-overview">
-                {result.overview
-                  ? truncate(result.overview, 120)
-                  : '今夜の一本、決定。'}
+                {overviewText ? truncate(overviewText, 120) : '今夜の一本、決定。'}
               </p>
 
               <div className="result-actions">
