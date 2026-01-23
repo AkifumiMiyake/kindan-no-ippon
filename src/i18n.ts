@@ -7,6 +7,9 @@ export type Dictionary = {
   noticeLine1: string
   noticeLine2: string
   languageLabel: string
+  languageShortJa: string
+  languageShortEn: string
+  languageShortKo: string
   scareLegend: string
   scareLight: string
   scareLightSub: string
@@ -62,6 +65,9 @@ export const I18N: Record<Locale, Dictionary> = {
     noticeLine1: 'ホラー映画の中から、今夜観る一本を',
     noticeLine2: 'ルーレットで決めるアプリです。',
     languageLabel: '言語',
+    languageShortJa: 'JA',
+    languageShortEn: 'EN',
+    languageShortKo: 'KO',
     scareLegend: '怖さレベル',
     scareLight: '軽め',
     scareLightSub: '心理・雰囲気',
@@ -117,6 +123,9 @@ export const I18N: Record<Locale, Dictionary> = {
     noticeLine1: 'Pick one horror movie for tonight,',
     noticeLine2: 'decided by roulette only.',
     languageLabel: 'Language',
+    languageShortJa: 'JA',
+    languageShortEn: 'EN',
+    languageShortKo: 'KO',
     scareLegend: 'Scare Level',
     scareLight: 'Light',
     scareLightSub: 'Psychological',
@@ -172,6 +181,9 @@ export const I18N: Record<Locale, Dictionary> = {
     noticeLine1: '공포 영화 중에서 오늘 밤 볼 한 편을',
     noticeLine2: '룰렛으로 정하는 앱입니다.',
     languageLabel: '언어',
+    languageShortJa: 'JA',
+    languageShortEn: 'EN',
+    languageShortKo: 'KO',
     scareLegend: '공포 강도',
     scareLight: '약함',
     scareLightSub: '심리/분위기',

@@ -22,13 +22,6 @@
   z-index: 30;
 }
 
-.locale-label {
-  font-size: 0.7rem;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
-  color: var(--text-muted);
-}
-
 .locale-select {
   background: #333333;
   color: var(--text);
