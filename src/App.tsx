@@ -334,17 +334,19 @@ function App() {
 
   return (
     <div className="page">
-      <div className="locale-selector">
-        <select
-          id="locale-select"
-          className="locale-select"
-          value={locale}
-          onChange={(event) => setLocale(event.target.value as Locale)}
-        >
-          <option value="ja">{t.languageShortJa}</option>
-          <option value="en">{t.languageShortEn}</option>
-          <option value="ko">{t.languageShortKo}</option>
-        </select>
+      <div className="topbar">
+        <div className="locale-selector">
+          <select
+            id="locale-select"
+            className="locale-select"
+            value={locale}
+            onChange={(event) => setLocale(event.target.value as Locale)}
+          >
+            <option value="ja">{t.languageShortJa}</option>
+            <option value="en">{t.languageShortEn}</option>
+            <option value="ko">{t.languageShortKo}</option>
+          </select>
+        </div>
       </div>
 
       <header className="hero">
