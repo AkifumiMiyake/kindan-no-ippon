@@ -350,14 +350,14 @@ function App() {
       </div>
 
       <header className="hero">
-        <p className="kicker">{t.kicker}</p>
+        <h2 className="kicker">今日観る映画を自動で決めたい人へ</h2>
         <h1 className="title">{t.appTitle}</h1>
         <p className="subtitle">{t.subtitle}</p>
-        <p className="notice">
+        <h3 className="notice">
           {t.noticeLine1}
           <br />
           {t.noticeLine2}
-        </p>
+        </h3>
       </header>
 
       <section className="panel">
