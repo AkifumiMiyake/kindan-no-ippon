@@ -107,8 +107,7 @@ export const I18N: Record<Locale, Dictionary> = {
     trailerButton: '予告編をYouTubeで検索',
     decisionLine1: '今夜は、これでいきましょう。',
     decisionLine2: 'いい時間になりますように。',
-    footerCredit:
-      'This product uses the TMDB API but is not endorsed or certified by TMDB.',
+    footerCredit: 'This product uses the TMDB API.',
     loadingDetails: '詳細を読み込み中…',
     sectionHeadline: '迷う夜に、禁断の選択を',
     sectionDescription:
@@ -165,8 +164,7 @@ export const I18N: Record<Locale, Dictionary> = {
     trailerButton: 'Search trailer on YouTube',
     decisionLine1: 'Let’s go with this tonight.',
     decisionLine2: 'Hope you have a great time.',
-    footerCredit:
-      'This product uses the TMDB API but is not endorsed or certified by TMDB.',
+    footerCredit: 'This product uses the TMDB API.',
     loadingDetails: 'Loading details…',
     sectionHeadline: 'When You Can’t Decide What to Watch',
     sectionDescription:
@@ -223,8 +221,7 @@ export const I18N: Record<Locale, Dictionary> = {
     trailerButton: 'YouTube에서 예고편 검색',
     decisionLine1: '오늘 밤은 이걸로 가죠.',
     decisionLine2: '좋은 시간 되세요.',
-    footerCredit:
-      'This product uses the TMDB API but is not endorsed or certified by TMDB.',
+    footerCredit: 'This product uses the TMDB API.',
     loadingDetails: '상세 정보 불러오는 중…',
     sectionHeadline: '결정하지 못하는 밤에, 금단의 선택을',
     sectionDescription:

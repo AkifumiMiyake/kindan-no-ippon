@@ -530,7 +530,19 @@ function App() {
         </div>
       )}
 
-      <footer className="footer">{t.footerCredit}</footer>
+      <footer className="footer">
+        <span>{t.footerCredit}</span>
+        <a
+          className="x-link"
+          href="https://x.com/ygreNsq3d640083"
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label="Xで作者を見る"
+        >
+          <span className="x-link-text">不具合・ご要望はこちら</span>
+          <img src="/x-logo-fff.svg" alt="X" />
+        </a>
+      </footer>
     </div>
   )
 }
