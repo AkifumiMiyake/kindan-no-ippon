@@ -534,7 +534,7 @@ function App() {
         <span>{t.footerCredit}</span>
         <a
           className="x-link"
-          href="https://x.com/ygreNsq3d640083"
+          href="https://x.com/kikitoshiteyume"
           target="_blank"
           rel="noopener noreferrer"
           aria-label="Xで作者を見る"
